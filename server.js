@@ -10,9 +10,9 @@ app.use(cors());
 const PORT = 3000;
 
 // 🔹 PONÉ TUS DATOS DE AZURE AQUÍ
-const tenantId = "e3cdf199-0408-4ad9-b37c-4e8d682211b9";
-const clientId = "f1b18efc-5ceb-455a-912e-d5e6f27f621e";
-const clientSecret = "0WZ8Q~w4pyaLFOmm.xo7SjW_iSo8.3UYK-3a6a3h";
+const tenantId = process.env.AZURE_TENANT_ID;
+const clientId = process.env.AZURE_CLIENT_ID;
+const clientSecret = process.env.AZURE_CLIENT_SECRET;
 
 const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
 async function getGraphClient() {
@@ -53,3 +53,4 @@ app.post('/upload', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+
