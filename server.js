@@ -42,7 +42,7 @@ app.post('/upload', async (req, res) => {
     // Path completo en OneDrive/SharePoint
     const folderPath = '/Documents/Formularios/Extra Seguro'; // tu carpeta
 
-    await client.api(`/me/drive/root:${folderPath}/${filename}:/content`)
+    await client.api(`/drives/{drive-id}/root:/path`)
       .put(fileBuffer);
 
     res.json({ success: true, message: 'PDF subido correctamente' });
@@ -53,4 +53,5 @@ app.post('/upload', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+
 
