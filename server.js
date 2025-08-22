@@ -12,7 +12,7 @@ const TENANT_ID = process.env.TENANT_ID;                 // p.ej. "e3cdf199-0408
 const CLIENT_ID = process.env.CLIENT_ID;                 // ID de la app (Aplicación/Client ID)
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         // Secreto de la app
 const ONEDRIVE_OWNER_UPN = process.env.ONEDRIVE_OWNER_UPN; // p.ej. "agustina_sosa@cars.com.uy"
-const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Extra-Seguro-BSE";
+const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Extra Seguro";
 
 // CORS: permitir tu GitHub Pages
 app.use(cors({
@@ -147,5 +147,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
