@@ -7,10 +7,8 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "body-parser": "^1.20.2",
-    "@microsoft/microsoft-graph-client": "^3.0.0",
-    "@azure/identity": "^3.2.0",
-    "isomorphic-fetch": "^3.0.0",
-    "cors": "^2.8.5"
+    "@azure/msal-node": "^1.25.0",
+    "axios": "^1.6.0",
+    "multer": "^1.4.5"
   }
 }
