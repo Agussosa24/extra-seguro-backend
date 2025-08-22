@@ -1,57 +1,23 @@
+require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
-const { Client } = require('@microsoft/microsoft-graph-client');
-require('isomorphic-fetch');
-const { ClientSecretCredential } = require('@azure/identity');
+const multer = require('multer');
+const uploadPdf = require('./upload'); // tu upload.js
 
 const app = express();
-const cors = require("cors");
-app.use(cors());
-const PORT = 3000;
+const upload = multer({ storage: multer.memoryStorage() }); // guarda el PDF en memoria
 
-// 🔹 PONÉ TUS DATOS DE AZURE AQUÍ
-const tenantId = process.env.AZURE_TENANT_ID;
-const clientId = process.env.AZURE_CLIENT_ID;
-const clientSecret = process.env.AZURE_CLIENT_SECRET;
-
-const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-async function getGraphClient() {
-  const tokenResponse = await credential.getToken("https://graph.microsoft.com/.default");
-  const client = Client.init({
-    authProvider: (done) => {
-      done(null, tokenResponse.token);
-    }
-  });
-  return client;
-}
-
-// Middleware
-app.use(bodyParser.json({ limit: '50mb' })); // soporte para archivos grandes
-
-// Endpoint para recibir PDF
-app.post('/upload', async (req, res) => {
+app.post('/upload', upload.single('pdf'), async (req, res) => {
   try {
-    const { filename, fileBase64 } = req.body;
-    if (!filename || !fileBase64) {
-      return res.json({ success: false, error: 'Faltan datos' });
-    }
-
-    const fileBuffer = Buffer.from(fileBase64, 'base64');
-    const client = await getGraphClient();
-
-    // Path completo en OneDrive/SharePoint
-    const folderPath = '/Documents/Formularios/Extra Seguro'; // tu carpeta
-
-    await client.api(`/drives/{drive-id}/root:/path`)
-      .put(fileBuffer);
-
+    const buffer = req.file.buffer;
+    const filename = req.file.originalname;
+    await uploadPdf(buffer, filename);
     res.json({ success: true, message: 'PDF subido correctamente' });
-  } catch (error) {
-    console.error(error);
-    res.json({ success: false, error: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
-
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Servidor corriendo en puerto ${port}`));
 
