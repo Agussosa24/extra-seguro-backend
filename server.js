@@ -11,8 +11,8 @@ const upload = multer();
 const TENANT_ID = process.env.TENANT_ID;                 
 const CLIENT_ID = process.env.CLIENT_ID;                 
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
-const SITE_ID = "ea09f8fc-39e8-4e88-afed-d4f28f34e5a0"; // group.id
-const DRIVE_ID = "b!j8urL_yXr0iq0n_9FEdXV92D0uu5MAZJgsWi8_bvS0lmNAVuFJP7SLnQXZnIav_c"; // id del drive
+const SITE_ID = process.env.SITE_ID; // ID del sitio SharePoint
+const DRIVE_ID = process.env.DRIVE_ID; // ID del drive de Documentos compartidos
 const FOLDER_PATH = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
 
 // CORS
@@ -40,10 +40,12 @@ async function getAccessToken() {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
+
   const data = await r.json();
   if (!r.ok) {
     throw new Error(`Token error: ${r.status} - ${JSON.stringify(data)}`);
   }
+
   return data.access_token;
 }
 
@@ -77,7 +79,7 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
     const accessToken = await getAccessToken();
-    const result = await uploadToSharePoint(accessToken, buffer, filename);
+    const result = await uploadToSharePoint(accessToken, req.file.buffer, filename);
 
     res.json({
       ok: true,
@@ -96,6 +98,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
