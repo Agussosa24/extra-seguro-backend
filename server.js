@@ -13,7 +13,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
 const SITE_ID = "ea09f8fc-39e8-4e88-afed-d4f28f34e5a0"; // group.id
 const DRIVE_ID = "b!j8urL_yXr0iq0n_9FEdXV92D0uu5MAZJgsWi8_bvS0lmNAVuFJP7SLnQXZnIav_c"; // id del drive
-const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
+const FOLDER_PATH = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
 
 // CORS
 app.use(cors({
@@ -47,50 +47,7 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-// 2) Asegurar carpeta (crea anidadas si no existen)
-async function ensureFolder(accessToken, folderPath) {
-  const segments = folderPath.split("/").filter(Boolean);
-
-  let parentPath = ""; // acumulado
-  for (const seg of segments) {
-    parentPath += `/${seg}`;
-
-    // Consultar si existe
-    const getUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:${encodeURI(parentPath)}`;
-    let res = await fetch(getUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (res.status === 404) {
-      // Crear en el padre
-      const parentDir = parentPath.slice(0, parentPath.lastIndexOf("/")) || "";
-      const createUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:${encodeURI(parentDir)}:/children`;
-
-      res = await fetch(createUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: seg,
-          folder: {},
-          "@microsoft.graph.conflictBehavior": "replace",
-        }),
-      });
-
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(`No pude crear carpeta "${seg}" en "${parentDir}": ${res.status} - ${t}`);
-      }
-    } else if (!res.ok) {
-      const t = await res.text();
-      throw new Error(`Error consultando "${parentPath}": ${res.status} - ${t}`);
-    }
-  }
-}
-
-// 3) Subir archivo a /drives/{driveId}/root:/<carpeta>/<archivo>:/content
+// 2) Subir archivo a SharePoint
 async function uploadToSharePoint(accessToken, buffer, filename) {
   const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${filename}:/content`;
 
@@ -111,7 +68,7 @@ async function uploadToSharePoint(accessToken, buffer, filename) {
   return res.json();
 }
 
-// 4) Endpoint para recibir el PDF desde el frontend
+// 3) Endpoint para recibir el PDF desde el frontend
 app.post("/upload", upload.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
@@ -119,7 +76,7 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
     }
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
-    const token = await getAccessToken();
+    const accessToken = await getAccessToken();  // ✅ renombrado
     const result = await uploadToSharePoint(accessToken, req.file.buffer, filename);
 
     res.json({
