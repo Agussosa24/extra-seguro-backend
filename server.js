@@ -76,8 +76,8 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
     }
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
-    const accessToken = await getAccessToken();  // ✅ renombrado
-    const result = await uploadToSharePoint(accessToken, req.file.buffer, filename);
+    const accessToken = await getAccessToken();
+    const result = await uploadToSharePoint(accessToken, buffer, filename);
 
     res.json({
       ok: true,
@@ -96,6 +96,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
