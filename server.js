@@ -8,22 +8,20 @@ const app = express();
 const upload = multer();
 
 // ⚠️ Variables de entorno (configurarlas en Render)
-const TENANT_ID = process.env.TENANT_ID;                 // p.ej. "e3cdf199-0408-4ad9-b37c-4e8d682211b9"
-const CLIENT_ID = process.env.CLIENT_ID;                 // ID de la app (Aplicación/Client ID)
-const CLIENT_SECRET = process.env.CLIENT_SECRET;         // Secreto de la app
-const ONEDRIVE_OWNER_UPN = process.env.ONEDRIVE_OWNER_UPN; // p.ej. "agustina_sosa@cars.com.uy"
-const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Extra Seguro";
+const TENANT_ID = process.env.TENANT_ID;                 
+const CLIENT_ID = process.env.CLIENT_ID;                 
+const CLIENT_SECRET = process.env.CLIENT_SECRET;         
+const ONEDRIVE_DRIVE_ID = "b!j8urL_ABCDEFGHIJKLMN1234567890";
+const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
 
-// CORS: permitir tu GitHub Pages
+// CORS
 app.use(cors({
   origin: ["https://agussosa24.github.io"],
   methods: ["POST"],
 }));
 
 // Sanity check
-app.get("/", (req, res) => {
-  res.send("OK");
-});
+app.get("/", (req, res) => res.send("OK"));
 
 // 1) Obtener token (app-only)
 async function getAccessToken() {
@@ -57,7 +55,7 @@ async function ensureFolder(accessToken, folderPath) {
     parentPath += `/${seg}`;
 
     // Consultar si existe
-    const getUrl = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(ONEDRIVE_OWNER_UPN)}/drive/root:${encodeURI(parentPath)}`;
+    const getUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:${encodeURI(parentPath)}`;
     let res = await fetch(getUrl, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -65,7 +63,7 @@ async function ensureFolder(accessToken, folderPath) {
     if (res.status === 404) {
       // Crear en el padre
       const parentDir = parentPath.slice(0, parentPath.lastIndexOf("/")) || "";
-      const createUrl = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(ONEDRIVE_OWNER_UPN)}/drive/root:${encodeURI(parentDir)}:/children`;
+      const createUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:${encodeURI(parentDir)}:/children`;
 
       res = await fetch(createUrl, {
         method: "POST",
@@ -91,14 +89,12 @@ async function ensureFolder(accessToken, folderPath) {
   }
 }
 
-// 3) Subir archivo a /root:/<carpeta>/<archivo>:/content
+// 3) Subir archivo a /drives/{driveId}/root:/<carpeta>/<archivo>:/content
 async function uploadToOneDrive(accessToken, buffer, filename) {
-  // Asegurar carpeta primero
   await ensureFolder(accessToken, ONEDRIVE_FOLDER);
 
-  const uploadUrl =
-    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(ONEDRIVE_OWNER_UPN)}` +
-    `/drive/root:/${encodeURIComponent(ONEDRIVE_FOLDER)}/${encodeURIComponent(filename)}:/content`;
+  const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:/${ONEDRIVE_FOLDER}/${filename}:/content`;
+
 
   const up = await fetch(uploadUrl, {
     method: "PUT",
@@ -134,7 +130,7 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
       ok: true,
       id: result.id,
       name: result.name,
-      webUrl: result.webUrl, // enlace a OneDrive
+      webUrl: result.webUrl,
     });
   } catch (e) {
     console.error("❌ /upload:", e);
