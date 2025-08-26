@@ -13,7 +13,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
 const SITE_ID = process.env.SITE_ID; // ID del sitio SharePoint
 const DRIVE_ID = process.env.DRIVE_ID; // ID del drive de Documentos compartidos
-const FOLDER_PATH = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
+const FOLDER_PATH = "Extra Seguro"; // Carpeta dentro de Documentos
 
 // CORS
 app.use(cors({
@@ -51,7 +51,7 @@ async function getAccessToken() {
 
 // 2) Subir archivo a SharePoint
 async function uploadToSharePoint(accessToken, buffer, filename) {
-  const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${filename}:/content`;
+  const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${filename}:/content`;
 
   const res = await fetch(uploadUrl, {
     method: "PUT",
@@ -98,6 +98,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
