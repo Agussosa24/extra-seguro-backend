@@ -11,7 +11,8 @@ const upload = multer();
 const TENANT_ID = process.env.TENANT_ID;                 
 const CLIENT_ID = process.env.CLIENT_ID;                 
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
-const ONEDRIVE_DRIVE_ID = "b!j8urL_ABCDEFGHIJKLMN1234567890";
+const SITE_ID = "ea09f8fc-39e8-4e88-afed-d4f28f34e5a0"; // group.id
+const DRIVE_ID = "b!j8urL_yXr0iq0n_9FEdXV92D0uu5MAZJgsWi8_bvS0lmNAVuFJP7SLnQXZnIav_c"; // id del drive
 const ONEDRIVE_FOLDER = process.env.ONEDRIVE_FOLDER || "Formularios/Extra Seguro";
 
 // CORS
@@ -143,6 +144,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
