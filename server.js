@@ -91,29 +91,24 @@ async function ensureFolder(accessToken, folderPath) {
 }
 
 // 3) Subir archivo a /drives/{driveId}/root:/<carpeta>/<archivo>:/content
-async function uploadToOneDrive(accessToken, buffer, filename) {
-  await ensureFolder(accessToken, ONEDRIVE_FOLDER);
+async function uploadToSharePoint(accessToken, buffer, filename) {
+  const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${filename}:/content`;
 
-  const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${FILENAME}:/content`;
-
-
-  const up = await fetch(uploadUrl, {
+  const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/pdf",
+      "Content-Type": "application/pdf"
     },
-    body: buffer,
+    body: buffer
   });
 
-  const text = await up.text();
-  if (!up.ok) {
-    throw new Error(`Upload error: ${up.status} - ${text}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error subiendo PDF: ${res.status} - ${text}`);
   }
 
-  let json;
-  try { json = JSON.parse(text); } catch { json = {}; }
-  return json;
+  return res.json();
 }
 
 // 4) Endpoint para recibir el PDF desde el frontend
@@ -125,7 +120,7 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
     const token = await getAccessToken();
-    const result = await uploadToOneDrive(token, req.file.buffer, filename);
+    const result = await uploadToSharePoint(accessToken, req.file.buffer, filename);
 
     res.json({
       ok: true,
@@ -144,6 +139,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
