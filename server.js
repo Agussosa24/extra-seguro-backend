@@ -94,7 +94,7 @@ async function ensureFolder(accessToken, folderPath) {
 async function uploadToOneDrive(accessToken, buffer, filename) {
   await ensureFolder(accessToken, ONEDRIVE_FOLDER);
 
-  const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${ONEDRIVE_DRIVE_ID}/root:/${ONEDRIVE_FOLDER}/${filename}:/content`;
+  const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${FILENAME}:/content`;
 
 
   const up = await fetch(uploadUrl, {
@@ -144,6 +144,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
