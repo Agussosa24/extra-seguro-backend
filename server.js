@@ -13,16 +13,22 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
 const SITE_ID = process.env.SITE_ID; // ID del sitio SharePoint
 const DRIVE_ID = process.env.DRIVE_ID; // ID del drive de Documentos compartidos
-const FOLDER_PATH = "Extra Seguro"; // Carpeta dentro de Documentos
+const FOLDER_PATH = process.env.FOLDER_PATH || "Extra Seguro";
 
-// CORS
+// 🌍 CORS seguro con variable de entorno ALLOWED_ORIGIN
+// Ejemplo: ALLOWED_ORIGIN="https://agussosa24.github.io,https://otrodominio.com"
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || "").split(",").filter(Boolean);
+
 app.use(cors({
-  origin: ["https://agussosa24.github.io"],
-  methods: ["POST"],
+  origin: allowedOrigins.length > 0 ? allowedOrigins : "*", // fallback a "*" si no hay configurado
+  methods: ["POST", "OPTIONS"],
 }));
 
+// habilitar preflight específico para /upload
+app.options("/upload", cors());
+
 // Sanity check
-app.get("/", (req, res) => res.send("OK"));
+app.get("/", (req, res) => res.send("✅ Backend funcionando"));
 
 // 1) Obtener token (app-only)
 async function getAccessToken() {
@@ -51,7 +57,9 @@ async function getAccessToken() {
 
 // 2) Subir archivo a SharePoint
 async function uploadToSharePoint(accessToken, buffer, filename) {
-  const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${FOLDER_PATH}/${filename}:/content`;
+  const safeFolder = encodeURI(FOLDER_PATH);  // carpeta (permite espacios)
+  const safeName   = encodeURIComponent(filename); // archivo
+  const uploadUrl  = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${safeFolder}/${safeName}:/content`;
 
   const res = await fetch(uploadUrl, {
     method: "PUT",
@@ -76,6 +84,7 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "Falta el archivo 'pdf' en form-data" });
     }
+
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
     const accessToken = await getAccessToken();
@@ -98,6 +107,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend listo en puerto ${PORT}`);
 });
+
 
 
 
