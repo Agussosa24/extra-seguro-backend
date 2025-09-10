@@ -13,7 +13,9 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;         
 const SITE_ID = process.env.SITE_ID; // ID del sitio SharePoint
 const DRIVE_ID = process.env.DRIVE_ID; // ID del drive de Documentos compartidos
-const FOLDER_PATH = process.env.FOLDER_PATH || "Extra Seguro";
+
+// Carpeta por defecto si no se pasa ninguna
+const DEFAULT_FOLDER = process.env.FOLDER_PATH || "Extra Seguro";
 
 // 🌍 CORS seguro con variable de entorno ALLOWED_ORIGIN
 // Ejemplo: ALLOWED_ORIGIN="https://agussosa24.github.io,https://otrodominio.com"
@@ -56,8 +58,8 @@ async function getAccessToken() {
 }
 
 // 2) Subir archivo a SharePoint
-async function uploadToSharePoint(accessToken, buffer, filename) {
-  const safeFolder = encodeURI(FOLDER_PATH);  // carpeta (permite espacios)
+async function uploadToSharePoint(accessToken, buffer, filename, folder) {
+  const safeFolder = encodeURI(folder);       // carpeta (permite espacios)
   const safeName   = encodeURIComponent(filename); // archivo
   const uploadUrl  = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${safeFolder}/${safeName}:/content`;
 
@@ -87,14 +89,18 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
 
     const filename = (req.body.filename || req.file.originalname || "archivo.pdf").trim();
 
+    // 👉 Carpeta dinámica según lo que mande la web
+    const folder = (req.body.folder && req.body.folder.trim()) || DEFAULT_FOLDER;
+
     const accessToken = await getAccessToken();
-    const result = await uploadToSharePoint(accessToken, req.file.buffer, filename);
+    const result = await uploadToSharePoint(accessToken, req.file.buffer, filename, folder);
 
     res.json({
       ok: true,
       id: result.id,
       name: result.name,
       webUrl: result.webUrl,
+      folder: folder,
     });
   } catch (e) {
     console.error("❌ /upload:", e);
